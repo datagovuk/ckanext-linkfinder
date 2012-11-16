@@ -32,7 +32,8 @@ class Ruleset(object):
         q = model.Session.query(Ruleset).from_statement(query).params(url=url)
         return q.first()
 
-    #
+    def __str__(self):
+        return u"<Ruleset: %s, %s>" % (self.publisher_name, self.url_regex)
 
 ruleset_table = Table('lf_ruleset', metadata,
                       Column('id', types.UnicodeText, primary_key=True,

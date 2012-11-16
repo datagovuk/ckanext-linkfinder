@@ -36,4 +36,4 @@ class TestFinder(object):
         assert len(links) == 3, links
 
     def test_find_ruleset(self):
-        print Ruleset.find_for_url('http://')
+        print Ruleset.find_for_url('http://www.ons.gov.uk/ons/rel/social-trends-rd/social-trends/no--31--2001-edition/index.html')

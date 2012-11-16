@@ -24,6 +24,8 @@ class XPathSearch(object):
 
     def process(self, page, nodelist, config):
         """
+        Search the page using the config xpath instruction to
+        locate links and add them to the nodelist
         """
         nodelist.append('Errk')
         return nodelist
@@ -33,6 +35,8 @@ class CSSSearch(object):
 
     def process(self, page, nodelist, config):
         """
+        Search the page using the config css selector to
+        locate links and add them to the nodelist
         """
         nodes = page.cssselect(config)
         nodelist.extend(nodes)
@@ -43,6 +47,7 @@ class LinkSearch(object):
 
     def process(self, page, nodelist, config):
         """
+        Apply the regex in config to all node hrefs in the nodelist
         """
         nodelist.append('LinkS')
         return nodelist
@@ -52,6 +57,7 @@ class AnchorTextSearch(object):
 
     def process(self, page, nodelist, config):
         """
+        Apply the regex in config to all node text in the nodelist
         """
         nodelist.append('Anchor')
         return nodelist
