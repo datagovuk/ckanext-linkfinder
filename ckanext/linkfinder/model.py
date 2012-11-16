@@ -27,9 +27,9 @@ class Ruleset(object):
             setattr(self, k, v)
 
     @classmethod
-    def find_for_url(cls, url):
-        query = "select * from lf_ruleset where :url ~ url_regex"
-        q = model.Session.query(Ruleset).from_statement(query).params(url=url)
+    def find(cls, publisher_name, url):
+        query = "select * from lf_ruleset where publisher_name=:pub and :url ~ url_regex"
+        q = model.Session.query(Ruleset).from_statement(query).params(url=url,pub=publisher_name)
         return q.first()
 
     def __str__(self):

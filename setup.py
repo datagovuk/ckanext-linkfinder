@@ -22,6 +22,7 @@ setup(
 	install_requires=[
 		'lxml',
 		'cssselect',
+		'requests'
 	],
 	entry_points=\
 	"""

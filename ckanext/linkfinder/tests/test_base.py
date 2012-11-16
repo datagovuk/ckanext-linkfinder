@@ -35,9 +35,9 @@ def create_test_data():
 
         {'id':'test_2', 'publisher_name': 'office-for-national-statistics',
          'url_regex': '^http://www.ons.gov.uk/ons/rel/.*$',
-         'follow_link': '^ons/publications/re-reference-tables.html.*$',
-         'xpath': '', 'css': '', 'link_regex': '^.*[*.xls|*.csv|*.zip].*$',
-         'link_text_regex': '', 'allow_multiple': 0},
+         'follow_link': '^.*ons/publications/re-reference-tables.html.*$',
+         'xpath': '', 'css': 'a', 'link_regex': '^.*(\.xls|\.csv|\.zip)$',
+         'link_text_regex': '', 'allow_multiple': 1},
     ]
     for data in datadicts:
         if not model.Session.query(Ruleset).filter(Ruleset.url_regex==data['url_regex']).first():

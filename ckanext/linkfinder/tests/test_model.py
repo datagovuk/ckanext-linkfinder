@@ -13,27 +13,14 @@ class TestFinder(object):
     def teardown_class(cls):
         clean_test_data()
 
-    def test_skip_all(self):
-        """
-        """
-        config = {'xpath': '',
-                  'css': '',
-                  'link': '',
-                  'anchortext': ''}
-
-        links = Finder().search("<html>", config)
-        assert len(links) == 0, links
-
-    def test_skip_xpath(self):
-        """
-        """
-        config = {'xpath': '',
-                  'css': 'a',
-                  'link': '//',
-                  'anchortext': '//'}
-
-        links = Finder().search("<html><a href='http://localhost'>Test</a>", config)
-        assert len(links) == 3, links
+    def xtest_find_ruleset(self):
+        u = 'http://www.ons.gov.uk/ons/rel/ilch/index-of-labour-costs-per-hour--experimental-/q4-2010/index.html'
+        p = Finder(u).process_url('office-for-national-statistics')
+        assert len(p) == 1, p
+        assert p[0][0] == 'Excel', p[0]
+        assert p[0][1] == 'http://www.ons.gov.uk/ons/rel/ilch/index-of-labour-costs-per-hour--experimental-/q4-2010/index-of-labour-costs--ilch-.xls'
 
     def test_find_ruleset(self):
-        print Ruleset.find_for_url('http://www.ons.gov.uk/ons/rel/social-trends-rd/social-trends/no--31--2001-edition/index.html')
+        u = 'http://www.ons.gov.uk/ons/rel/rsi/retail-sales/october-2012/stb-rsi-october-2012.html'
+        p = Finder(u).process_url('office-for-national-statistics')
+        assert len(p) == 6, p
