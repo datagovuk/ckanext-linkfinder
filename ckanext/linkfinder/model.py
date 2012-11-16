@@ -28,6 +28,14 @@ class Ruleset(object):
 ruleset_table = Table('lf_ruleset', metadata,
                       Column('id', types.UnicodeText, primary_key=True,
                              default=make_uuid),
+                      Column('publisher_name', types.UnicodeText),
+                      Column('url_regex', types.UnicodeText),
+                      Column('follow_link', types.UnicodeText),
+                      Column('xpath', types.UnicodeText),
+                      Column('css', types.UnicodeText),
+                      Column('link_regex', types.UnicodeText),
+                      Column('link_text_regex', types.UnicodeText),
+                      Column('allow_multiple', types.Integer),
                 )
 mapper(Ruleset, ruleset_table)
 
