@@ -33,5 +33,9 @@ setup(
         [paste.paster_command]
         checklinks = ckanext.linkfinder.command:CheckLinks
         initdb = ckanext.linkfinder.command:InitDB
+
+        [ckan.celery_task]
+        tasks=ckanext.linkfinder.celery_import:task_imports
+
 	""",
 )
