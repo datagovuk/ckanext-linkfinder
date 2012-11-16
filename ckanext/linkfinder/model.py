@@ -12,8 +12,10 @@ from ckan.lib.base import *
 
 log = __import__('logging').getLogger(__name__)
 
+
 def make_uuid():
     return unicode(uuid.uuid4())
+
 
 metadata = MetaData()
 
@@ -24,6 +26,13 @@ class Ruleset(object):
         for k,v in kwargs.items():
             setattr(self, k, v)
 
+    @classmethod
+    def find_for_url(cls, url):
+        query = "select * from lf_ruleset where :url ~ url_regex"
+        q = model.Session.query(Ruleset).from_statement(query).params(url=url)
+        return q.first()
+
+    #
 
 ruleset_table = Table('lf_ruleset', metadata,
                       Column('id', types.UnicodeText, primary_key=True,
