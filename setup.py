@@ -21,6 +21,7 @@ setup(
 	zip_safe=False,
 	install_requires=[
 		'lxml',
+		'cssselect',
 	],
 	entry_points=\
 	"""
