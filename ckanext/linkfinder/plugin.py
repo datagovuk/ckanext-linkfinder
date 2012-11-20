@@ -28,6 +28,7 @@ class LinkFinderPlugin(p.SingletonPlugin):
         }
 
     def notify(self, entity, operation=None):
+        """
         if not isinstance(entity, model.Resource):
             return
 
@@ -38,6 +39,7 @@ class LinkFinderPlugin(p.SingletonPlugin):
             # if operation is None, resource URL has been changed, as the
             # notify function in IResourceUrlChange only takes 1 parameter
             self._create_task(entity)
+        """
 
     def _create_task(self, resource):
         user = get_action('get_site_user')({'model': model,
