@@ -37,6 +37,7 @@ class Finder(object):
         # and follow it, overwriting the page content.
         if rules.follow_link:
             r = re.compile(rules.follow_link)
+
             page = fromstring(pagetext)
             nodes = CSSSearch().process(page, [], 'a')
             for node in nodes:
