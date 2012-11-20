@@ -3,6 +3,7 @@ import datetime
 import os
 import re
 import time
+import sys
 
 from .model import init_tables
 
@@ -18,8 +19,8 @@ class ONSUpdateTask(CkanCommand):
     """
     summary = __doc__.split('\n')[0]
     usage = __doc__
-    max_args = 1
-    min_args = 0
+    max_args = 2
+    min_args = 1
 
     def __init__(self, name):
         super(ONSUpdateTask, self).__init__(name)
@@ -34,7 +35,13 @@ class ONSUpdateTask(CkanCommand):
     def command(self):
         """
         """
+        import ckanclient
         from ckanext.linkfinder.lib.ons_scraper import scrape_ons_publication
+
+        if len(self.args) == 0:
+            print "You must specify your API key (and optionally a dataset name)"
+            sys.exit(0)
+
         self._load_config()
         log = logging.getLogger(__name__)
 
@@ -43,59 +50,47 @@ class ONSUpdateTask(CkanCommand):
         model.Session.configure(bind=model.meta.engine)
         model.repo.new_revision()
 
-        if len(self.args) == 1:
-            print 'Fetching %s' % self.args[0]
-            datasets = [model.Package.get(self.args[0])]
-        else:
-            # For some reason the resourcegroup object is in between datasets
-            # and its resources, which makes doing a regex on the query rather
-            # painful.
-            datasets = model.Session.query(model.Package)\
-                .join(model.PackageExtra)\
-                .filter(model.PackageExtra.key=="external_reference")\
-                .filter(model.PackageExtra.value=="ONSHUB")\
-                .order_by('package.name desc').all()
+        ckan = ckanclient.CkanClient(base_location='%sapi' % config['ckan.site_url'],
+                             api_key=self.args[0])
 
-        def chunk(n, l):
-            for i in xrange(0, len(l), n):
-                yield l[i:i+n]
+        opts = {'external_reference': 'ONSHUB', 'offset': 0, 'limit': 10000}
+        q = ''
+        if len(self.args) == 2:
+            q = self.args[1]
+
+        search_results = ckan.package_search(q, opts)
+        log.info("There are %d results" % search_results['count'])
+        datasets = search_results['results']
 
         counter = 0
         resource_count = 0
-        for dataset_chunk in chunk(100, datasets):
-            log.info('Processing next chunk of 100')
-            for dataset in dataset_chunk:
-                added = False
-                time.sleep(1)
+        for dsname in datasets:
+            dataset = ckan.package_entity_get(dsname)
+            counter = counter + 1
+            added = False
+            time.sleep(0.5)
 
-                new_resources = scrape_ons_publication(dataset)
-                if new_resources:
-                    counter = counter + 1
+            new_resources = scrape_ons_publication(dataset)
+            if new_resources:
+                for r in new_resources:
+                    # Check if the URL already appears in the dataset's
+                    # resources, and if so then skip it.
+                    existing = [x for x in dataset['resources'] if x['url'] == r['url']]
+                    if existing:
+                        log.error("The URL for this resource was already found in this dataset")
+                        continue
 
-                    for r in new_resources:
-                        # Check if the URL already appears in the dataset's
-                        # resources, and if so then skip it.
-                        matched = [x for x in dataset.resources if x.url == r['url']]
-                        if matched:
-                            log.error("The URL for this resource was already found in this dataset")
-                            continue
+                    resource_count = resource_count + 1
+                    #dataset.add_resource(r['url'],
+                    #                     description=r['description'],
+                    #                     format=r['url'][-3:],
+                    #                     name=r['title'])
 
-                        resource_count = resource_count + 1
-                        dataset.add_resource(r['url'],
-                                             description=r['description'],
-                                             format=r['url'][-3:],
-                                             name=r['title'])
+                    #log.info("Update resource %s as documentation" % (r['original'],))
+                    #r['original'].resource_type = documentation
+                    #model.Session.add(r['original'])
 
-                        if self.options.delete_resources:
-                            log.info("Marking resource %s as deleted" % (r['original'],))
-                            r['original'].state = 'deleted'
-                            model.Session.add(r['original'])
-
-                        added = True
-
-                if added:
-                    model.Session.add(dataset)
-            model.Session.commit()
+                    added = True
 
         print "Processed %d datasets" % (counter)
         print "Added %d resources" % (resource_count)

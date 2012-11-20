@@ -16,15 +16,15 @@ def scrape_ons_publication(dataset):
     and processed by this scraper.
     """
     resources = []
-    for resource in dataset.resources:
-        if url_regex.match(resource.url):
+    for resource in dataset['resources']:
+        if url_regex.match(resource['url']):
             resources.append(resource)
 
     if not resources:
         return None
 
     log = logging.getLogger(__name__)
-    log.info("Processing dataset %s" % dataset.name)
+    log.info("Processing dataset %s" % dataset['name'])
 
     return filter(None, [_process_ons_resource(dataset,r) for r in resources] )
 
@@ -35,15 +35,15 @@ def _process_ons_resource(dataset, resource):
     results = []
 
     # Get the first page that we were pointed at.
-    r = requests.get(resource.url)
+    r = requests.get(resource['url'])
     if r.status_code <> 200:
-        log.error("Failed to fetch %s, got status %s" % (resource.url, r.status_code))
+        log.error("Failed to fetch %s, got status %s" % (resource['url'], r.status_code))
         return None
 
     # need to follow the link to the data page. Somewhere on the page is a link
     # that looks like ^.*ons/publications/re-reference-tables.html.*$
     if not r.content:
-        log.error("Successfully fetched %s but page was empty" % (resource.url,))
+        log.error("Successfully fetched %s but page was empty" % (resource['url'],))
         return None
 
     page = fromstring(r.content)
@@ -52,7 +52,7 @@ def _process_ons_resource(dataset, resource):
     for node in nodes:
         h = node.get('href')
         if h and follow_regex.match(h):
-            href = urljoin(resource.url, h)  # Will return href if it includes proto://host..
+            href = urljoin(resource['url'], h)  # Will return href if it includes proto://host..
             break
 
     if not href:
@@ -61,7 +61,7 @@ def _process_ons_resource(dataset, resource):
 
     r = requests.get(href)
     if r.status_code <> 200:
-        log.error("Failed to fetch data page %s, got status %s" % (resource.url, r.status_code))
+        log.error("Failed to fetch data page %s, got status %s" % (resource['url'], r.status_code))
         return None
 
     page = fromstring(r.content)
@@ -85,7 +85,7 @@ def _process_ons_resource(dataset, resource):
         log.error("Could not find a link on the data page at %s" % (href,))
         return None
 
-    return {'url': urljoin(resource.url, url),
+    return {'url': urljoin(resource['url'], url),
             'description': description,
             'title': title,
             'original': resource}
