@@ -50,7 +50,7 @@ class ONSUpdateTask(CkanCommand):
         site_user = get_action('get_site_user')({'model': model, 'ignore_auth': True}, {})
         apikey = site_user['apikey']
 
-        ckan = ckanclient.CkanClient(base_location='%sapi' % config['ckan.site_url'],
+        ckan = ckanclient.CkanClient(base_location='http://localhost/api',
                                      api_key=apikey)
 
         opts = {'external_reference': 'ONSHUB', 'offset': 0, 'limit': 10000}
