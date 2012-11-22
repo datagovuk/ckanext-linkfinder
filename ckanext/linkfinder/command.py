@@ -19,8 +19,8 @@ class ONSUpdateTask(CkanCommand):
     """
     summary = __doc__.split('\n')[0]
     usage = __doc__
-    max_args = 2
-    min_args = 1
+    max_args = 1
+    min_args = 0
 
     def __init__(self, name):
         super(ONSUpdateTask, self).__init__(name)
@@ -37,10 +37,7 @@ class ONSUpdateTask(CkanCommand):
         """
         import ckanclient
         from ckanext.linkfinder.lib.ons_scraper import scrape_ons_publication
-
-        if len(self.args) == 0:
-            print "You must specify your API key (and optionally a dataset name)"
-            sys.exit(0)
+        from ckan.logic import get_action
 
         self._load_config()
         log = logging.getLogger(__name__)
@@ -50,16 +47,19 @@ class ONSUpdateTask(CkanCommand):
         model.Session.configure(bind=model.meta.engine)
         model.repo.new_revision()
 
+        site_user = get_action('get_site_user')({'model': model, 'ignore_auth': True}, {})
+        apikey = site_user['apikey']
+
         ckan = ckanclient.CkanClient(base_location='%sapi' % config['ckan.site_url'],
-                                     api_key=self.args[0])
+                                     api_key=apikey)
 
         opts = {'external_reference': 'ONSHUB', 'offset': 0, 'limit': 10000}
         q = ''
-        if len(self.args) == 2:
-            q = self.args[1].replace(',', '')
+        if len(self.args) == 1:
+            q = self.args[0].replace(',', '')
 
         search_results = ckan.package_search(q, opts)
-        log.info("There are %d results" % search_results['count'])
+        log.debug("There are %d results" % search_results['count'])
         datasets = search_results['results']
 
         counter = 0
@@ -69,6 +69,8 @@ class ONSUpdateTask(CkanCommand):
             counter = counter + 1
             added = False
             time.sleep(0.5)
+
+            log.info('Processing %s' % (dsname,))
 
             new_resources = scrape_ons_publication(dataset)
             if new_resources:
@@ -96,8 +98,8 @@ class ONSUpdateTask(CkanCommand):
 
                     added = True
 
-        print "Processed %d datasets" % (counter)
-        print "Added %d resources" % (resource_count)
+        log.info("Processed %d datasets" % (counter))
+        log.info( "Added %d resources" % (resource_count))
 
 class CheckLinks(CkanCommand):
     """

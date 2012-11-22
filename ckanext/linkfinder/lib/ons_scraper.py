@@ -23,9 +23,6 @@ def scrape_ons_publication(dataset):
     if not resources:
         return None
 
-    log = logging.getLogger(__name__)
-    log.info("Processing dataset %s" % dataset['name'])
-
     return filter(None, [_process_ons_resource(dataset,r) for r in resources] )
 
 
@@ -43,7 +40,7 @@ def _process_ons_resource(dataset, resource):
     # need to follow the link to the data page. Somewhere on the page is a link
     # that looks like ^.*ons/publications/re-reference-tables.html.*$
     if not r.content:
-        log.error("Successfully fetched %s but page was empty" % (resource['url'],))
+        log.debug("Successfully fetched %s but page was empty" % (resource['url'],))
         return None
 
     page = fromstring(r.content)
@@ -56,7 +53,7 @@ def _process_ons_resource(dataset, resource):
             break
 
     if not href:
-        log.error("Unable to find the 'data' page which contains links to resources")
+        log.debug("Unable to find the 'data' page which contains links to resources")
         return None
 
     r = requests.get(href)
@@ -82,7 +79,7 @@ def _process_ons_resource(dataset, resource):
         description = description.strip()[len('Description: '):]
 
     if not url:
-        log.error("Could not find a link on the data page at %s" % (href,))
+        log.info("Could not find a link on the data page at %s" % (href,))
         return None
 
     return {'url': urljoin(resource['url'], url),
