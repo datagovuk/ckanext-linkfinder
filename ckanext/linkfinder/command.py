@@ -51,12 +51,12 @@ class ONSUpdateTask(CkanCommand):
         model.repo.new_revision()
 
         ckan = ckanclient.CkanClient(base_location='%sapi' % config['ckan.site_url'],
-                             api_key=self.args[0])
+                                     api_key=self.args[0])
 
         opts = {'external_reference': 'ONSHUB', 'offset': 0, 'limit': 10000}
         q = ''
         if len(self.args) == 2:
-            q = self.args[1]
+            q = self.args[1].replace(',', '')
 
         search_results = ckan.package_search(q, opts)
         log.info("There are %d results" % search_results['count'])
@@ -72,6 +72,13 @@ class ONSUpdateTask(CkanCommand):
 
             new_resources = scrape_ons_publication(dataset)
             if new_resources:
+                # Update the fold resources, if they need to have their type set.
+                for r in dataset['resources']:
+                    r['resource_type'] = 'documentation'
+
+                # Save the update to the resources for this dataset
+                ckan.package_entity_put(dataset)
+
                 for r in new_resources:
                     # Check if the URL already appears in the dataset's
                     # resources, and if so then skip it.
@@ -81,14 +88,11 @@ class ONSUpdateTask(CkanCommand):
                         continue
 
                     resource_count = resource_count + 1
-                    #dataset.add_resource(r['url'],
-                    #                     description=r['description'],
-                    #                     format=r['url'][-3:],
-                    #                     name=r['title'])
-
-                    #log.info("Update resource %s as documentation" % (r['original'],))
-                    #r['original'].resource_type = documentation
-                    #model.Session.add(r['original'])
+                    ckan.add_package_resource(dataset['name'], r['url'],
+                                              resource_type='data',
+                                              format=r['url'][-3:],
+                                              description=r['description'],
+                                              name=r['title'])
 
                     added = True
 
