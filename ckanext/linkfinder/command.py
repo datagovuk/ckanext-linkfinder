@@ -68,7 +68,7 @@ class ONSUpdateTask(CkanCommand):
             dataset = ckan.package_entity_get(dsname)
             counter = counter + 1
             added = False
-            time.sleep(0.5)
+            time.sleep(1)
 
             log.info('Processing %s' % (dsname,))
 
