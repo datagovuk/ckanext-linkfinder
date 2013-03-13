@@ -1,3 +1,4 @@
+import collections
 import logging
 import datetime
 import os
@@ -12,6 +13,60 @@ from ckan.lib.cli import CkanCommand
 # No other CKAN imports allowed until _load_config is run,
 # or logging is disabled
 
+class ONSReportTask(CkanCommand):
+    """"""
+    summary = __doc__.split('\n')[0]
+    usage = __doc__
+    max_args = 0
+    min_args = 0
+
+    def __init__(self, name):
+        super(ONSReportTask, self).__init__(name)
+
+
+    def command(self):
+        import ckanclient
+        from ckan.logic import get_action
+        import urlparse, operator
+
+        self._load_config()
+        log = logging.getLogger(__name__)
+
+        import ckan.model as model
+        model.Session.remove()
+        model.Session.configure(bind=model.meta.engine)
+        model.repo.new_revision()
+
+        packages = []
+        data = model.Session.query(model.Package).filter(model.Package.state=='active').all()
+        for p in data:
+            if 'external_reference' in p.extras and p.extras['external_reference'] == 'ONSHUB':
+                packages.append(p)
+                #if len(packages) > 100:
+                #    break
+
+        hosts = collections.defaultdict(int)
+        publishers = collections.defaultdict(int)
+
+        for p in packages:
+            pp = p.get_groups('publisher')
+            if len(pp):
+                publishers[pp[0].name] = publishers[pp[0].name] + 1
+            for resource in p.resources:
+                u = urlparse.urlparse(resource.url).netloc
+                hosts[u] = hosts[u] + 1
+        sorted_hosts = sorted(hosts.iteritems(), key=operator.itemgetter(1), reverse=True)
+        sorted_publishers = sorted(publishers.iteritems(), key=operator.itemgetter(1), reverse=True)
+
+        print 'Publishers'
+        print '----------'
+        for p in sorted_publishers:
+            print p[0], p[1]
+
+        print '\nHosts'
+        print '----------'
+        for p in sorted_hosts:
+            print p[0], p[1]
 
 class ONSUpdateTask(CkanCommand):
     """
@@ -29,8 +84,6 @@ class ONSUpdateTask(CkanCommand):
                                default=False,
                                dest='delete_resources',
                                help='If specified, old resources that are replaced will be deleted')
-
-
 
     def command(self):
         """

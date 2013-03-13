@@ -34,6 +34,6 @@ setup(
         checklinks = ckanext.linkfinder.command:CheckLinks
         initdb = ckanext.linkfinder.command:InitDB
         ons_update_once = ckanext.linkfinder.command:ONSUpdateTask
-
+        onsreport = ckanext.linkfinder.command:ONSReportTask
 	""",
 )
