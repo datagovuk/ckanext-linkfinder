@@ -32,6 +32,7 @@ def _update_task_status(context, data):
 @celery.task(name = "linkfinder.search")
 def update(context, data):
     """
+    TODO: Implement the callbacks
     """
     log = update.get_logger()
     try:
